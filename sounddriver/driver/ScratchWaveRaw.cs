@@ -35,6 +35,7 @@ namespace Sound
         /// </summary>
         List<Int16[]> _grainListL;
         List<Int16[]> _grainListR;
+
         int _grainIndex;
         /// <summary>
         /// グレインの実サイズ(50msecでのサンプル数)
@@ -114,6 +115,9 @@ namespace Sound
             _mixersamplerate = mixersamplerate;
         }
 
+        /// <summary>
+        /// 440HzSin波を作成
+        /// </summary>
         public void MakeSineData()
         {
             ResampleI16RawDataL = new Int16[_mixersamplerate * 2];
@@ -507,6 +511,8 @@ namespace Sound
             return rtnList;
         }
 
+        #region "Bitmap画像関連"
+
         int _dotpersec;
         /// <summary>
         /// 波形Bitmap作成
@@ -517,7 +523,7 @@ namespace Sound
         public Bitmap scratchBmp(int dotpersec, int band)
         {
             _dotpersec = dotpersec;
-            int width = (ResampleI16RawDataL.Count() * dotpersec / _mixersamplerate);
+            int width = (ResampleI16RawDataL.Count() / _mixersamplerate) * dotpersec;
             double keisuu = (double)band / 32767;
             int height = band;
             int center = height / 2;
@@ -562,7 +568,8 @@ namespace Sound
             return (int)(grainmsec * dotpermsec);
         }
 
-
+        #endregion
+        
         #endregion
 
     }

@@ -283,6 +283,7 @@ public class StreamingBuffer
     #endregion
 
     #region"ローカル関数
+
     /// <summary>
     /// 足してInt16に収める。超えた値はMAXにしてしまう
     /// </summary>
@@ -299,6 +300,7 @@ public class StreamingBuffer
         else
             return (Int16)sum;
     }
+
     #endregion
 
 }

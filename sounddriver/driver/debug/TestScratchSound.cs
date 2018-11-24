@@ -33,7 +33,7 @@ namespace Sound
             framemanager.TestStreaming();
         }
 
-
+        /*
         /// <summary>
         /// 実践テスト
         /// </summary>
@@ -93,5 +93,6 @@ namespace Sound
                 now = now.AddMilliseconds(16.66);
             }
         }
+        */
     }
 }

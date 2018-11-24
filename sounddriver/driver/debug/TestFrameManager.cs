@@ -41,8 +41,11 @@ namespace Sound
                 {
                     Test.Print("TestStreaming  いい感じにストリーミング");
                     List<short> rawL, rawR;
+                    //後ろのマージ部分を切り取って
                     merged.CutBackMergeRawData(out rawL,out rawR);
+                    //次のフレームと合成しておく。
                     framelist.First().MergeFront(rawL, rawR);
+                    //手前フレームはバッファに送り込む
                     streamingbuffer.AddInt16Buffer(merged.RawDataL, merged.RawDataR);
                 }
                 else
@@ -55,7 +58,7 @@ namespace Sound
             streamingbuffer.Streaming();
 
         }
-
+        /*
         //生データ一括で送信するテスト
         public void TestAllPlay(PictureBox pct)
         {
@@ -96,5 +99,6 @@ namespace Sound
                 streamingbuffer.Streaming();
             }
         }
+        */ 
     }
 }

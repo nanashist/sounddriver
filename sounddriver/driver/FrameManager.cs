@@ -109,6 +109,7 @@ namespace Sound
             if (frame.RawDataL.Count == 0) return;
 
             FrameRawData pre = Last();
+
             /*
             frame.konkaituika = frame.RawDataL.Count;
             if (pre.MergeSize == 0)
@@ -130,7 +131,8 @@ namespace Sound
                 }
             }
             //
-             * */
+            */
+
             //Ticks単位で今回フレームの再生時間数
             frame.DataTicks = (frame.RawDataL.Count - frame.MergeSize) * MyUtil.ticks2sec / samplerate;
 
@@ -164,6 +166,7 @@ namespace Sound
                 }
             }
         }
+
         /// <summary>
         /// framelistからいい感じのものをstreamingbufferに流し込んでいく
         /// </summary>
@@ -216,6 +219,7 @@ namespace Sound
         {
             framelist.Clear();
         }
+
         /// <summary>
         /// 前回フレーム情報を元に今回どのくらいつめるかを返す(これプラスマージ分つめる)
         /// </summary>

@@ -14,23 +14,122 @@ public static class SoundDriver
     private static IWavePlayer waveOut;
     private static WaveFormat waveformat;
     private static Dictionary<string, IWaveProvider> DctWaveProvider;
+    //メインファイルの位置情報取得やボリューム変更用
+    private static AudioFileReader audiofilereader;
+
+
+    #region "サウンドデバイスの初期化
+
+    public static List<string> GetAsioDriverNames()
+    {
+        return AsioOut.GetDriverNames().ToList();
+    }
+
+    /// <summary>
+    /// ASIOデフォルトかなければ
+    /// Wasapiで初期化
+    /// </summary>
+    public static void Init()
+    {
+        if (GetAsioDriverNames().Count == 0)
+            waveOut = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 100);
+        else
+            waveOut = new AsioOut();
+        InitCommon(waveOut);
+    }
+    /// <summary>
+    /// IeeeFloat,44100Hz,2ch(固定)でミキサーの初期化
+    /// </summary>
+    public static void Init(string drivername)
+    {
+        AsioOut asioOut = new AsioOut(drivername);//NAudio.CoreAudioApi.AudioClientShareMode.Exclusive,100);
+        InitCommon(asioOut);
+    }
 
     /// <summary>
     /// IeeeFloat,44100Hz,2ch(固定)でミキサーの初期化
     /// </summary>
-    public static void Init()
+    public static void Init(string drivername, int channeloffset)
     {
-        mixer = new MixingWaveProvider32();
+        AsioOut asioOut = new AsioOut(drivername);
+        asioOut.ChannelOffset = channeloffset;
 
-        //waveOut = new AsioOut();//NAudio.CoreAudioApi.AudioClientShareMode.Exclusive,100);
-        Test.Print("ASIOに変更");
-        waveOut = new WasapiOut(NAudio.CoreAudioApi.AudioClientShareMode.Shared, 100);
-        waveOut.Init(mixer);
-        waveformat = WaveFormatExtensible.CreateIeeeFloatWaveFormat(44100, 2);
-        
-
-        DctWaveProvider = new Dictionary<string, IWaveProvider>();
+        InitCommon(asioOut);
     }
+
+    private static void InitCommon(IWavePlayer waveout)
+    {
+        waveOut = waveout;
+        mixer = new MixingWaveProvider32();
+        waveOut.Init(mixer);
+        waveformat = new WaveFormat(44100, 2);
+        DctWaveProvider = new Dictionary<string, IWaveProvider>();
+        audiofilereader = null;
+    }
+
+    public static void Dispose()
+    {
+        waveOut.Stop();
+    }
+
+    #endregion
+
+    #region "再生関連"
+
+    /// <summary>
+    /// 再生開始
+    /// </summary>
+    public static void Play()
+    {
+        waveOut.Play();
+    }
+    /// <summary>
+    /// 再生停止
+    /// </summary>
+    public static void Stop()
+    {
+        waveOut.Stop();
+    }
+
+    /// <summary>
+    /// 再生状態取得
+    /// </summary>
+    /// <returns></returns>
+    public static PlaybackState PlaybackState()
+    {
+        return waveOut.PlaybackState;
+    }
+    /// <summary>
+    /// 現在のmainの再生位置
+    /// </summary>
+    /// <returns></returns>
+    public static TimeSpan MainCurrentTime()
+    {
+        if (audiofilereader != null)
+            return audiofilereader.CurrentTime;
+        else
+            return new TimeSpan(0, 0, 0);
+    }
+
+    /// <summary>
+    /// 現在のmainの曲長
+    /// </summary>
+    /// <returns></returns>
+    public static TimeSpan MainTotalTime()
+    {
+        if (audiofilereader != null)
+            return audiofilereader.TotalTime;
+        else
+            return new TimeSpan(0, 0, 0);
+    }
+
+    /// <summary>
+    /// メインのボリューム
+    /// </summary>
+    public static float MainVolume { set { if (audiofilereader != null)audiofilereader.Volume = value; } }
+
+    #endregion
+
     /// <summary>
     /// 44100Hz,2chのファイル読み込み("main"で追加される)
     /// </summary>
@@ -40,8 +139,8 @@ public static class SoundDriver
         IWaveProvider FloatStereo44100Provider;
         AudioFileReader reader;
         reader = new AudioFileReader(filename);
+        audiofilereader = reader;
         Test.Print("Volume消す");
-        reader.Volume = 0.01F;
 
         IWaveProvider stereo;
         if (reader.WaveFormat.Channels == 1)
@@ -68,29 +167,8 @@ public static class SoundDriver
         }
 
         FloatStereo44100Provider = stereo;//最終的にこの形式に統一44100にするかどうかは検討の余地あり
-        
+
         SoundDriver.AddWaveProvider(FloatStereo44100Provider, "main");
-    }
-
-    /// <summary>
-    /// 再生開始
-    /// </summary>
-    public static void Play()
-    {
-        waveOut.Play();
-    }
-
-    public static void Stop()
-    {
-        waveOut.Stop();
-    }
-    /// <summary>
-    /// 再生状態取得
-    /// </summary>
-    /// <returns></returns>
-    public static PlaybackState PlaybackState()
-    {
-        return waveOut.PlaybackState;
     }
 
     /// <summary>
@@ -135,12 +213,7 @@ public static class SoundDriver
             DctWaveProvider.Remove(name);
         }
     }
-
-    public static void Dispose()
-    {
-        waveOut.Stop();
-    }
-
+    
     public static IWaveProvider GetWaveProvider(string name)
     {
         if (DctWaveProvider.ContainsKey(name))

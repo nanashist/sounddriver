@@ -114,7 +114,8 @@ namespace Sound
         /// </summary>
         /// <param name="deltaSpeed">今回追加する分の速度</param>
         /// <param name="now"></param>
-        public void MakeRawDataDeltaTime(double deltaSpeed, DateTime now)
+        /// <returns>音量の平均</returns>
+        public Int16 MakeRawDataDeltaTime(double deltaSpeed, DateTime now)
         {
             //前回呼んだときからの差分時間分のデータをframelistに追加
             double speed = deltaSpeed;
@@ -150,9 +151,24 @@ namespace Sound
             //生データでの時間から理論時間を引いて余剰をrestとして保存しておく
             double rest = scratchWaveRaw.GetSample2msec(I16listL.Count - mergesize) - msec;//カウント
             framemanager.Add(new FrameRawData(now, speed, reverse, rest, mergesize, I16listL, I16listR, grainStart, grainEnd, grainCount));
+            long sum=0;
+            foreach (Int16 i in I16listL)
+                sum += Math.Abs(i / 256);
+            return (short)(sum / (I16listL.Count-mergesize));
         }
-
-
+        
+        /// <summary>
+        /// 毎フレーム呼んでスクラッチ音声の流し込みとバッファストリーミング
+        /// </summary>
+        /// <param name="deltaSpeed"></param>
+        /// <param name="now"></param>
+        /// <returns></returns>
+        public Int16 DoFrame(double deltaSpeed, DateTime now)
+        {
+            Int16 rtn = MakeRawDataDeltaTime(deltaSpeed, now);
+            framemanager.TestStreaming();
+            return rtn;
+        }
 
         #region "画像"
         public Bitmap ScratchBitmap(int dotpersec, int band)
