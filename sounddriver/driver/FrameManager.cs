@@ -10,6 +10,9 @@ namespace Sound
 
     public partial class FrameManager
     {
+        //FrameManagerに追加してから何秒後に再生を開始するか。レスポンスに直結なのでなるべく短くしたい
+        //これ＋ASIOのレイテンシが実質的な再生遅延になる？
+        const double buffermsec = 36;//50;
 
         public IWaveProvider OutputWaveProvider { get { return streamingbuffer.OutputWaveProvider; } }
         public StreamingBuffer streamingbuffer;
@@ -17,7 +20,7 @@ namespace Sound
         private int samplerate;
         //毎フレームのRawdata(前フレームが１フレ以上のデータがあれば次フレはデータなし)
         private List<FrameRawData> framelist = new List<FrameRawData>();
-        double buffermsec = 100;//50;
+        
 
         public int FrameCount { get { return framelist.Count; } }
 

@@ -13,6 +13,8 @@ namespace Sound
     /// </summary>
     public class scratchWaveRaw
     {
+        const int _grainmsec = 25;//グレインの半分のmsec
+                
         string _filename;
         /// <summary>
         /// ミキサーのサンプリングレート
@@ -42,7 +44,6 @@ namespace Sound
         /// </summary>
         int _grainSize;//50msecのサンプル数(1/20sec)
         int _grainHalfSize;
-        static int _grainmsec = 25;//グレインの半分のmsec
 
         public int GrainHalfSize { get { return _grainHalfSize; } }
 
@@ -182,11 +183,6 @@ namespace Sound
                         _grainListR.Add(temp);
                     }
                 }
-            }
-            for (int i = 0; i < 16; i++)
-            {
-                _grainListL.RemoveAt(0);
-                _grainListR.RemoveAt(0);
             }
         }
 
@@ -513,6 +509,7 @@ namespace Sound
 
         #region "Bitmap画像関連"
 
+        Bitmap _bmpx2;
         int _dotpersec;
         /// <summary>
         /// 波形Bitmap作成
@@ -522,39 +519,100 @@ namespace Sound
         /// <returns></returns>
         public Bitmap scratchBmp(int dotpersec, int band)
         {
-            _dotpersec = dotpersec;
-            int width = (ResampleI16RawDataL.Count() / _mixersamplerate) * dotpersec;
-            double keisuu = (double)band / 32767;
-            int height = band;
-            int center = height / 2;
-            Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
-            for (int x = 0; x < width - 1; x++)
+            if (dotpersec == _dotpersec && _bmpx2 != null)
             {
-                int i1 = x * ResampleI16RawDataL.Count() / width;
-                int i2 = (x + 1) * ResampleI16RawDataL.Count() / width;
-                long plussum = 0;
-                long minussum = 0;
-                for (int n = i1; n < i2; n++)
+                return _bmpx2.Clone(new Rectangle(0,0,_bmpx2.Width/2,_bmpx2.Height),_bmpx2.PixelFormat);
+            }
+            else
+            {
+                _dotpersec = dotpersec;
+                int width = (ResampleI16RawDataL.Count() * dotpersec / _mixersamplerate) ;
+                double keisuu = (double)band / 32767;
+                int height = band;
+                int center = height / 2;
+                Bitmap bmp = new Bitmap(width, height, System.Drawing.Imaging.PixelFormat.Format24bppRgb);
+                for (int x = 0; x < width - 1; x++)
                 {
-                    if (ResampleI16RawDataL[n] > 0)
+                    int i1 = x * ResampleI16RawDataL.Count() / width;
+                    int i2 = (x + 1) * ResampleI16RawDataL.Count() / width;
+                    long plussum = 0;
+                    long minussum = 0;
+                    for (int n = i1; n < i2; n++)
                     {
-                        plussum += ResampleI16RawDataL[n];
+                        if (ResampleI16RawDataL[n] > 0)
+                        {
+                            plussum += ResampleI16RawDataL[n];
+                        }
+                        else
+                        {
+                            minussum += ResampleI16RawDataL[n];
+                        }
                     }
-                    else
+                    int start = (int)(center - keisuu * plussum / (i2 - i1));
+                    int end = (int)(center - keisuu * minussum / (i2 - i1));
+                    for (int y = start; y < end; y++)
                     {
-                        minussum += ResampleI16RawDataL[n];
+                        bmp.SetPixel(x, y, Color.FromArgb(0, 255, 0));
                     }
                 }
-                int start = (int)(center - keisuu * plussum / (i2 - i1));
-                int end = (int)(center - keisuu * minussum / (i2 - i1));
-                for (int y = start; y < end; y++)
+                _bmpx2 = new Bitmap(bmp.Width * 2, bmp.Height, bmp.PixelFormat);
+                Graphics g;
+                g = Graphics.FromImage(_bmpx2);
+                g.DrawImage(bmp, 0, 0, bmp.Width, bmp.Height);
+                g.DrawImage(bmp, bmp.Width, 0, bmp.Width, bmp.Height);
+                g.Dispose();
+                return bmp;
+            }
+            
+        }
+
+        public Bitmap scratchBmpWithLine(int dotpersec, int band,double xper)
+        {
+            Bitmap bmp = new Bitmap(scratchBmp(dotpersec, band));
+            int x = (int)(xper * bmp.Width);
+            if (x < bmp.Width)
+            {
+                for (int y = 0; y < bmp.Height - 1; y++)
                 {
-                    bmp.SetPixel(x, y, Color.FromArgb(0, 255, 0));
+                    bmp.SetPixel(x, y, Color.FromArgb(255, 255, 255));
                 }
             }
-
             return bmp;
         }
+        /// <summary>
+        /// 不要かも。
+        /// </summary>
+        /// <param name="dotpersec"></param>
+        /// <param name="band"></param>
+        /// <param name="xper"></param>
+        /// <returns></returns>
+        public Bitmap scratchBmpCentering(int dotpersec, int band, double xper)
+        {
+            if (_bmpx2 == null)
+                scratchBmp(dotpersec, band);
+            Bitmap bmp = new Bitmap(_bmpx2.Width/2,_bmpx2.Height,_bmpx2.PixelFormat);
+            Graphics g;
+            g = Graphics.FromImage(bmp);
+            int x;
+            if (xper + 0.5 > 1)
+                x = (int)((xper - 0.5) * bmp.Width);
+            else
+                x = (int)((xper + 0.5) * bmp.Width);
+
+            if (x < bmp.Width)
+            {
+                g.DrawImage(_bmpx2, new Rectangle(0, 0, bmp.Width , bmp.Height), new Rectangle(x, 0, bmp.Width , bmp.Height), GraphicsUnit.Pixel);
+            }
+            x = bmp.Width / 2;
+            for (int y = 0; y < bmp.Height - 1; y++)
+            {
+                bmp.SetPixel(x, y, Color.FromArgb(255, 255, 255));
+            }
+
+            g.Dispose();
+            return bmp;
+        }
+
         /// <summary>
         /// grainIndexから再生位置のX座標を取得
         /// </summary>

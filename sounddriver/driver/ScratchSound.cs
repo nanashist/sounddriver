@@ -95,6 +95,11 @@ namespace Sound
             return ScratchWaveRawDataList[ScratchWaveIndex].GrainIndex();
         }
 
+        public int GrainCount()
+        {
+            return ScratchWaveRawDataList[ScratchWaveIndex].MaxGrainIndex();
+        }
+
         /// <summary>
         /// グレインのindexをセット
         /// </summary>
@@ -151,10 +156,18 @@ namespace Sound
             //生データでの時間から理論時間を引いて余剰をrestとして保存しておく
             double rest = scratchWaveRaw.GetSample2msec(I16listL.Count - mergesize) - msec;//カウント
             framemanager.Add(new FrameRawData(now, speed, reverse, rest, mergesize, I16listL, I16listR, grainStart, grainEnd, grainCount));
-            long sum=0;
-            foreach (Int16 i in I16listL)
-                sum += Math.Abs(i / 256);
-            return (short)(sum / (I16listL.Count-mergesize));
+
+            if (I16listL.Count - mergesize > 0)
+            {
+                long sum = 0;
+                foreach (Int16 i in I16listL)
+                    sum += Math.Abs(i / 256);
+                return (short)(sum / (I16listL.Count - mergesize));
+            }
+            else
+            {
+                return 0;
+            }
         }
         
         /// <summary>
@@ -171,11 +184,19 @@ namespace Sound
         }
 
         #region "画像"
+
         public Bitmap ScratchBitmap(int dotpersec, int band)
         {
             Bitmap rtn = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp(dotpersec, band);
             return rtn;
         }
+
+        public Bitmap ScratchBitmapWithLine(int dotpersec, int band)
+        {
+            Bitmap bmp = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmpCentering(dotpersec, band, (double)GrainIndex() / GrainCount());
+            return bmp;
+        }
+
         #endregion
     }
 

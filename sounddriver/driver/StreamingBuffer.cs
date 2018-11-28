@@ -17,7 +17,9 @@ using NAudio.Wave;
 /// </summary>
 public class StreamingBuffer
 {
-    private double _streambuffermsec;
+    private const double _streambuffermsec = 500;//NAUDIO側のバッファがこの値以下ならこの値分バッファに詰め込む
+    //コメント修正 旧小さいほど良いが正常動作する限界値をセットしたい。この値を下回るタイミングでbufwaveproviderにバッファを追加していく
+
     private int _SamplingRate;
     private int _Channels;
     /// <summary>
@@ -60,7 +62,7 @@ public class StreamingBuffer
         ChannelBuffers = new Int16Buffer[2];
         ChannelBuffers[0] = new Int16Buffer();
         ChannelBuffers[1] = new Int16Buffer();
-        _streambuffermsec = 500;//小さいほど良いが正常動作する限界値をセットしたい。この値を下回るタイミングでbufwaveproviderにバッファを追加していく
+        
     }
 
     /// <summary>

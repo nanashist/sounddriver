@@ -20,17 +20,26 @@ namespace WindowsFormsApplication1
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            SoundDriver.Init();
+            var s = SoundDriver.GetAsioDriverNames();
+            SoundDriver.Init("Yamaha Steinberg USB ASIO");
 
         }
-
+        /// <summary>
+        /// ファイル読み込み＆再生
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button1_Click(object sender, EventArgs e)
         {
             SoundDriver.MainFileLoad(textBox1.Text);
-
+            SoundDriver.MainVolume = 0.01F;
             SoundDriver.Play();
         }
-
+        /// <summary>
+        /// 再生状態取得
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
             lblPlaybackState.Text = SoundDriver.PlaybackState().ToString();
@@ -38,48 +47,6 @@ namespace WindowsFormsApplication1
         }
 
         private Sound.ScratchSound scratchsound;
-        private bool inplay = false;
-
-        /// <summary>
-        /// すく再生
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void button5_Click(object sender, EventArgs e)
-        {
-            inplay = !inplay;
-            if (scratchsound != null)
-            {
-                scratchsound.stopflg = !inplay;
-            }
-            if (inplay)
-            {
-
-                    if (scratchsound == null)
-                    {
-                        if (SoundDriver.GetWaveProvider("main") != null)
-                        {
-                            scratchsound = new Sound.ScratchSound(SoundDriver.GetWaveProvider("main").WaveFormat);
-                            SoundDriver.AddWaveProvider(scratchsound.OutputWaveProvider, "stream");
-                        }
-                        else{
-                            scratchsound = new Sound.ScratchSound();
-                            SoundDriver.AddWaveProvider(scratchsound.OutputWaveProvider, "stream");
-                            SoundDriver.Play();
-                        }
-                    }
-                    //音声ファイル追加&インデックスを変更。既に追加済みならインデックスのみ変更
-                    scratchsound.addscratch(textBox2.Text);
-                    pictureBox1.Image = (Image)scratchsound.ScratchBitmap(200, 200);
-                    scratchsound.speed = (double)trackBar1.Value;
-                    lblDebug.Text = "再生";
-                    scratchsound.TestMake();
-
-                    lblDebug.Text = "停止";
-                    inplay = false;
-
-            }
-        }
 
         private void trackBar1_ValueChanged(object sender, EventArgs e)
         {
@@ -93,22 +60,19 @@ namespace WindowsFormsApplication1
         private double speed = 0;
         private void timer1_Tick(object sender, EventArgs e)
         {
-            /*
-            for (int i = 1; i <= 256; i++)
-            {
-                if (KeyBoard.KeyInput.GetKeyState(i))
-                {
-                    System.Diagnostics.Debug.WriteLine(
-                        "キーボード押下:" + ((Keys)i).ToString());
-                }
-            }
-             */
+            this.Text = SoundDriver.MainCurrentTime().ToString();
             if (scratchsound != null)
             {
                 List<Keys> keylist = KeyBoard.KeyInput.GetPressedKeyList();
                 bool bSpeed = false;
                 foreach (Keys k in keylist)
                 {
+                    if (k == Keys.Q) scratchsound.TestOneFrameMake(-0.6);
+                    if (k == Keys.W) scratchsound.TestOneFrameMake(-0.7);
+                    if (k == Keys.E) scratchsound.TestOneFrameMake(-0.8);
+                    if (k == Keys.R) scratchsound.TestOneFrameMake(-0.9);
+                    if (k == Keys.T) scratchsound.TestOneFrameMake(-1);
+
                     if (k == Keys.A) scratchsound.TestOneFrameMake(0.6);
                     if (k == Keys.S) scratchsound.TestOneFrameMake(0.7);
                     if (k == Keys.D) scratchsound.TestOneFrameMake(0.8);
@@ -127,7 +91,10 @@ namespace WindowsFormsApplication1
                     scratchsound.TestOneFrameMake(speed);
                 }
                 scratchsound.TestStreaming();
+                pictureBox1.Image = (Image)scratchsound.ScratchBitmapWithLine(200, 200);
+                //pictureBox1.Image=(Image)scratchsound.ScratchBitmapWithLine(200,2
             }
+            
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -140,6 +107,12 @@ namespace WindowsFormsApplication1
             Test.Close();
         }
 
+
+        /// <summary>
+        /// ストリーミング開始
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void btnStreaming_Click(object sender, EventArgs e)
         {
             if (scratchsound == null)

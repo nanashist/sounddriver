@@ -6,7 +6,7 @@ using System.Diagnostics;
 using System.IO;
 public class Test
 {
-    private static string logfilename = "c:/sounddriver.log";
+    private static string logfilename = "sounddriver.log";
 
     static StreamWriter tw;
     private static bool bInit = false;
