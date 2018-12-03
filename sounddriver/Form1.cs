@@ -130,7 +130,7 @@ namespace WindowsFormsApplication1
                 }
             }
             //音声ファイル追加&インデックスを変更。既に追加済みならインデックスのみ変更
-            scratchsound.addscratch(textBox2.Text);
+            scratchsound.addscratch(textBox2.Text, 0);
             pictureBox1.Image = (Image)scratchsound.ScratchBitmap(200, 200);
 
         }

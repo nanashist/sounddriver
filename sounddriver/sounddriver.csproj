@@ -72,9 +72,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="driver\debug\Test.cs" />
+    <Compile Include="driver\ScratchWaveRaw.Bitmapmake.cs" />
     <Compile Include="keyboard\Keyboard.cs" />
     <Compile Include="driver\DateTimeEx.cs" />
-    <Compile Include="driver\debug\TestFrameManager.cs" />
     <Compile Include="driver\debug\TestScratchSound.cs" />
     <Compile Include="driver\FrameManager.cs" />
     <Compile Include="driver\FrameRawData.cs" />
@@ -89,6 +89,14 @@
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="sample\frmScratch.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="sample\frmScratch.Designer.cs">
+      <DependentUpon>frmScratch.cs</DependentUpon>
+    </Compile>
+    <Compile Include="sample\SimpleXML.cs" />
+    <Compile Include="sample\XMLReaderWriter.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>
@@ -102,6 +110,9 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <EmbeddedResource Include="sample\frmScratch.resx">
+      <DependentUpon>frmScratch.cs</DependentUpon>
+    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>

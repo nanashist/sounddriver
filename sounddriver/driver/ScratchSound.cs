@@ -58,7 +58,7 @@ namespace Sound
         /// スクラッチに使うWAVデータを追加&インデックスを変更。既に追加済みならインデックスのみ変更
         /// </summary>
         /// <param name="filename"></param>
-        public void addscratch(string filename)
+        public void addscratch(string filename,int grainindex)
         {
             if (!dctScratchIndex.ContainsKey(filename))
             {
@@ -71,11 +71,14 @@ namespace Sound
                 }
                 else
                 {
-                    sw = new scratchWaveRaw(filename, _mixersamplerate);
+                    sw = new scratchWaveRaw(filename, grainindex, _mixersamplerate);
                 }
                 ScratchWaveRawDataList.Add(sw);
             }
             ScratchWaveIndex = dctScratchIndex[filename];
+        }
+        public void Clear()
+        {
         }
 
         /// <summary>
@@ -87,17 +90,27 @@ namespace Sound
         }
 
         /// <summary>
-        /// グレインのindexを取得
+        /// アクティブスクラッチの現在のグレインのindexを取得
         /// </summary>
         /// <returns></returns>
         public int GrainIndex()
         {
             return ScratchWaveRawDataList[ScratchWaveIndex].GrainIndex();
         }
-
+        /// <summary>
+        /// アクティブスクラッチのMaxグレイン数を取得
+        /// </summary>
+        /// <returns></returns>
         public int GrainCount()
         {
-            return ScratchWaveRawDataList[ScratchWaveIndex].MaxGrainIndex();
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+            {
+                return ScratchWaveRawDataList[ScratchWaveIndex].MaxGrainIndex();
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         /// <summary>
@@ -179,22 +192,102 @@ namespace Sound
         public Int16 DoFrame(double deltaSpeed, DateTime now)
         {
             Int16 rtn = MakeRawDataDeltaTime(deltaSpeed, now);
-            framemanager.TestStreaming();
+            framemanager.Streaming();
             return rtn;
         }
 
         #region "画像"
-
-        public Bitmap ScratchBitmap(int dotpersec, int band)
+        /// <summary>
+        /// imageに収まるサイズで画像を作成
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public Bitmap ScratchBitmap(Image image)
         {
-            Bitmap rtn = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp(dotpersec, band);
-            return rtn;
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+            {
+                Bitmap rtn = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp(image);
+                return rtn;
+            }
+            else
+            {
+                return null;
+            }
         }
 
+        /// <summary>
+        /// 毎秒何ドット、高さを指定して画像を作成
+        /// </summary>
+        /// <param name="dotpersec"></param>
+        /// <param name="band"></param>
+        /// <returns></returns>
+        public Bitmap ScratchBitmap(int dotpersec, int band)
+        {
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+            {
+                Bitmap rtn = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp(dotpersec, band);
+                return rtn;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 現在の再生位置に線を引いたBitmapを返す
+        /// </summary>
+        /// <param name="image"></param>
+        /// <returns></returns>
+        public Bitmap ScratchBitmapWithLine(Image image)
+        {
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+            {
+                Bitmap rtn = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp(image);
+                int x = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp_Xpos(GrainIndex());
+                if (x >= rtn.Width) x = rtn.Width - 1;
+                for (int y = 0; y < rtn.Height - 1; y++)
+                {
+                    rtn.SetPixel(x, y, Color.White);
+                }
+                return rtn;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// 現在の再生位置に線を引いたBitmapを返す
+        /// </summary>
+        /// <param name="dotpersec"></param>
+        /// <param name="band"></param>
+        /// <returns></returns>
         public Bitmap ScratchBitmapWithLine(int dotpersec, int band)
         {
-            Bitmap bmp = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmpCentering(dotpersec, band, (double)GrainIndex() / GrainCount());
-            return bmp;
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+            {
+                Bitmap bmp = ScratchWaveRawDataList[ScratchWaveIndex].scratchBmpCentering(dotpersec, band, (double)GrainIndex() / GrainCount());
+                return bmp;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// グレインインデックス指定でX座標を返す
+        /// </summary>
+        /// <param name="gindex"></param>
+        /// <returns></returns>
+        public int ScratchBitmapXposFromGrainIndex(int gindex)
+        {
+            if (ScratchWaveRawDataList.Count > ScratchWaveIndex)
+                return ScratchWaveRawDataList[ScratchWaveIndex].scratchBmp_Xpos(gindex);
+            else
+                return 0;
         }
 
         #endregion

@@ -30,7 +30,7 @@ namespace Sound
         public void TestStreaming()
         {
             //framemanager.framelistをstreamingbufferに流す＆streamingbufferのストリーミング処理
-            framemanager.TestStreaming();
+            framemanager.Streaming();
         }
 
         /*

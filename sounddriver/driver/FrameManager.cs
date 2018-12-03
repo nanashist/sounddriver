@@ -170,34 +170,79 @@ namespace Sound
             }
         }
 
+        ///// <summary>
+        ///// framelistからいい感じのものをstreamingbufferに流し込んでいく
+        ///// </summary>
+        //public void Streaming()
+        //{
+        //    FrameRawData nextframe = null;
+        //    List<FrameRawData> removelist = new List<FrameRawData>();
+        //    foreach (FrameRawData frame in framelist)
+        //    {
+        //        if (nextframe != null)
+        //        {
+        //            nextframe.MergeFrameRawDataOld(frame);
+        //            nextframe = null;
+        //        }
+        //        if (frame.PlayTime <= DateTimeEx.Now)
+        //        {
+        //            nextframe = frame;
+        //            removelist.Add(frame);
+        //        }
+        //    }
+        //    foreach (FrameRawData f in removelist)
+        //    {
+        //        streamingbuffer.AddInt16Buffer(f.RawDataL, f.RawDataR);
+        //        framelist.Remove(f);
+        //    }
+        //    streamingbuffer.Streaming();
+        //}
         /// <summary>
-        /// framelistからいい感じのものをstreamingbufferに流し込んでいく
+        /// 再生時刻(PlayTime)を過ぎたものを
+        /// FrameManagerからストリーミングバッファにデータを流す
         /// </summary>
         public void Streaming()
         {
-            FrameRawData nextframe = null;
+            Test.Print("Streaming  in");
             List<FrameRawData> removelist = new List<FrameRawData>();
-            foreach (FrameRawData frame in framelist)
+            foreach (FrameRawData f in framelist)
             {
-                if (nextframe != null)
+                if (f.PlayTime < DateTimeEx.Now)
                 {
-                    nextframe.MergeFrameRawDataOld(frame);
-                    nextframe = null;
-                }
-                if (frame.PlayTime <= DateTimeEx.Now)
-                {
-                    nextframe = frame;
-                    removelist.Add(frame);
+                    removelist.Add(f);
+                    break;
                 }
             }
-            foreach (FrameRawData f in removelist)
-            {
-                streamingbuffer.AddInt16Buffer(f.RawDataL, f.RawDataR);
-                framelist.Remove(f);
-            }
-            streamingbuffer.Streaming();
-        }
 
+            if (removelist.Count > 0)
+            {
+                foreach (FrameRawData f in removelist)
+                {
+                    framelist.Remove(f);
+                }
+                FrameRawData merged = FrameRawData.MergeFrameList(removelist);
+
+                if (framelist.Count > 0)
+                {
+                    Test.Print("Streaming  いい感じにストリーミング");
+                    List<short> rawL, rawR;
+                    //後ろのマージ部分を切り取って
+                    merged.CutBackMergeRawData(out rawL, out rawR);
+                    //次のフレームと合成しておく。
+                    framelist.First().MergeFront(rawL, rawR);
+                    //手前フレームはバッファに送り込む
+                    streamingbuffer.AddInt16Buffer(merged.RawDataL, merged.RawDataR);
+                }
+                else
+                {
+                    Test.Print("Streaming  バッファ空（framelistなくなった)");
+                    streamingbuffer.AddInt16Buffer(merged.RawDataL, merged.RawDataR);
+                }
+            }
+            //バッファストリーミング処理
+            streamingbuffer.Streaming();
+
+        }
         //public void NextFrame(DateTime now)
         //{
         //    if (framelist.Count == 0) return; 
